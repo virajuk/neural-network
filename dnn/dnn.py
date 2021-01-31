@@ -3,7 +3,7 @@ import cv2
 
 from keras.utils import to_categorical
 from keras.datasets import cifar10
-from keras.layers import Input, Flatten, Dense, Activation
+from keras.layers import Input, Flatten, Dense, Activation, Conv2D, BatchNormalization, LeakyReLU, Dropout
 from keras.models import Model, load_model
 from keras.optimizers import Adam
 
@@ -58,6 +58,58 @@ class DNN:
 
         self.model = Model(input_layer, output_layer)
 
+    def convolution_model(self, input_shape=(32, 32, 3)):
+
+        input_layer = Input(shape=input_shape, name='input_layer')
+
+        x = Conv2D(
+            filters=32,
+            kernel_size=3,
+            strides=1,
+            padding='same'
+        )(input_layer)
+        x = BatchNormalization()(x)
+        x = LeakyReLU()(x)
+
+        x = Conv2D(
+            filters=32,
+            kernel_size=3,
+            strides=2,
+            padding='same'
+        )(x)
+        x = BatchNormalization()(x)
+        x = LeakyReLU()(x)
+
+        x = Conv2D(
+            filters=64,
+            kernel_size=3,
+            strides=1,
+            padding='same'
+        )(x)
+        x = BatchNormalization()(x)
+        x = LeakyReLU()(x)
+
+        x = Conv2D(
+            filters=64,
+            kernel_size=3,
+            strides=2,
+            padding='same'
+        )(x)
+        x = BatchNormalization()(x)
+        x = LeakyReLU()(x)
+
+        x = Flatten()(x)
+
+        x = Dense(units=128)(x)
+        x = BatchNormalization()(x)
+        x = LeakyReLU()(x)
+        x = Dropout(rate=0.5)(x)
+
+        x = Dense(self.no_of_classes)(x)
+        output_layer = Activation('softmax')(x)
+
+        self.model = Model(input_layer, output_layer)
+
     def compile_model(self):
 
         opt = Adam(lr=0.0005)
@@ -65,28 +117,30 @@ class DNN:
 
     def train_model(self):
 
-        self.model.fit(self.x_train
-                       , self.y_train
-                       , self.batch_size
-                       , self.epochs
-                       , shuffle=True
-                       , verbose=2)
+        self.model.fit(self.x_train,
+                       self.y_train,
+                       self.batch_size,
+                       self.epochs,
+                       shuffle=True,
+                       verbose=1)
 
     def evaluate_model(self):
 
         # print(self.model.metrics_names)
-        scores = self.model.evaluate(self.x_test, self.y_test, verbose=1)
+        scores = self.model.evaluate(self.x_test, self.y_test, verbose=1, batch_size=1000)
         print(scores)
 
     def save_model(self):
 
-        self.model.save('model/my_ass.pb')
+        self.model.save('model/my_other_ass.pb')
 
     def load_model(self):
 
-        self.model = load_model('model/my_ass.pb')
+        self.model = load_model('model/my_other_ass.pb')
 
     def prediction(self, idx):
+
+        Model.predict()
 
         preds = self.model.predict(self.x_test)
         preds_single = self.classes[np.argmax(preds, axis=-1)]
